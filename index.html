@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload or Capture Photo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Upload or Capture a Photo of Your House Wall</h1>
+    <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" required>
+        <input type="submit" value="Upload">
+    </form>
+    <button id="cameraButton">Use Camera</button>
+    <div id="cameraContainer" style="display:none;">
+        <video id="video" width="640" height="480" autoplay></video>
+        <button id="snap">Snap Photo</button>
+        <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    </div>
+    <a href="{{ url_for('gallery') }}">View Wall Panel Gallery</a>
+
+    <!-- JavaScript for camera functionality -->
+    <script>
+        document.getElementById('cameraButton').addEventListener('click', function() {
+            document.getElementById('cameraContainer').style.display = 'block';
+            startCamera();
+        });
+
+        function startCamera() {
+            var video = document.getElementById('video');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    video.srcObject = stream;
+                    video.play();
+                }).catch(function(err) {
+                    console.error("Error accessing camera: " + err);
+                });
+            } else {
+                console.error("Camera not supported.");
+            }
+        }
+
+        document.getElementById('snap').addEventListener('click', function() {
+            var canvas = document.getElementById('canvas');
+            var video = document.getElementById('video');
+            var context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(function(blob) {
+                var file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+                var dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('fileInput').files = dataTransfer.files;
+                document.getElementById('uploadForm').submit();
+            }, 'image/jpeg');
+        });
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+</html>
